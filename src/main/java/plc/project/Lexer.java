@@ -28,14 +28,20 @@ public final class Lexer {
      * whitespace where appropriate.
      */
     public List<Token> lex() {
+        //array for all tokens
         List<Token> tokens = new ArrayList<>();
+        //while the charstream still has characters
         while(chars.has(0)) {
+            //check for white space
             if(!match(" ") || match("\b") || match("\n") || match("\r") || match("\t"))
+                //lex tokens
                 tokens.add(lexToken());
             else {
+                //skip whitespace
                 chars.skip();
             }
         }
+        //return list of tokens
         return tokens;
     }
 
@@ -48,75 +54,104 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
+        //check for identifier regex
         if(peek("(@|[A-Za-z])"))
             return lexIdentifier();
+        //check for number regex
         else if(peek("(-|[0-9])"))
             return lexNumber();
+        //check for char regex
         else if(peek("\'"))
             return lexCharacter();
+        //check for string regex
         else if(peek("\""))
             return lexString();
+        //check for operator regex
         else if(peek("(.)"))
             return lexOperator();
+        //If program cant parse throw exception
         throw new ParseException("Invalid char", chars.index);
     }
 
     public Token lexIdentifier() {
+        //match regex since 1st index is known
         match("(@|[A-Za-z])");
+        //move through charstream
         while(match("[A-Za-z0-9_-]"));
+        //return matched characters
         return chars.emit(Token.Type.IDENTIFIER);
     }
 
     public Token lexNumber() {
+        //skip dash
         match("[-]");
+        //check leading 0
         if(peek("0")) {
             if(!peek("[0]","[.]"))
                 throw new ParseException("Leading 0", chars.index);
         }
+        //index charstream until no number
         while(match("[0-9]"));
+        //check for decimal
         if(match("[.]")) {
+            //check for numbers after decimal
             if(peek("[0-9]+")) {
-                while (match("[0-9]")) ;
+                //index until no number found
+                while (match("[0-9]"));
+                //return the token of type decimal
                 return chars.emit(Token.Type.DECIMAL);
             } else {
+                //throw exception if ends in decimal
                 throw new ParseException("Cannot end in decimal", chars.index);
             }
         } else {
+            //return integer type if no decimal
             return chars.emit(Token.Type.INTEGER);
         }
     }
 
     public Token lexCharacter() {
+        //first index known
         match("\'");
+        //create regex
         String accepted = "[^\'\\n\\r]";
+        //check for escape or valid character
         if(peek("\\\\") || peek(accepted)) {
+            //if backslash use lexEscape
             if (peek("\\\\"))
                 lexEscape();
             else
                 match(accepted);
+            //if closing ' emit token
             if (match("\'"))
                 return chars.emit(Token.Type.CHARACTER);
             else
+                //throw error if no closing '
                 throw new ParseException("Expected closing quote", chars.index);
         }
         throw new ParseException("Invalid char", chars.index);
     }
 
     public Token lexString() {
+        //create regex
         String accepted = "[^\\\\\"\\n\\r]";
         match("\"");
+        //continue until closing "
         while(!peek("\"")) {
+            //check for escape
             if(peek("\\\\"))
                 lexEscape();
+            //check if valid string
             else if(peek(accepted))
                 match(accepted);
             else
+                //throw error if not valid string
                 throw new ParseException("Invalid string", chars.index);
         }
-        if(match("\""))
-            return chars.emit(Token.Type.STRING);
-        else
-            throw new ParseException("Expected closing quote", chars.index);
+        //close string
+        match("\"");
+        //emit token
+        return chars.emit(Token.Type.STRING);
     }
 
     public void lexEscape() {
@@ -127,9 +162,13 @@ public final class Lexer {
     }
 
     public Token lexOperator() {
+        //check for special cases
         if(match("!", "=") || match("=","=") || match("&","&") || match("|", "|"))
+            //emit token
             return chars.emit(Token.Type.OPERATOR);
+        //any character regex except no whitespace
         else if (match("[^\t^\b^\n^\r^ ]"))
+            //emit token
             return chars.emit(Token.Type.OPERATOR);
         throw new ParseException("invalid", chars.index);
     }
