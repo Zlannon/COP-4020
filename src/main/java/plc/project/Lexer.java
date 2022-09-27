@@ -33,7 +33,7 @@ public final class Lexer {
         //while the charstream still has characters
         while(chars.has(0)) {
             //check for white space
-            if(!match(" ") || match("\b") || match("\n") || match("\r") || match("\t"))
+            if(!match(" ") && !match("\b") && !match("\n") && !match("\r") && !match("\t"))
                 //lex tokens
                 tokens.add(lexToken());
             else {
@@ -167,7 +167,7 @@ public final class Lexer {
             //emit token
             return chars.emit(Token.Type.OPERATOR);
         //any character regex except no whitespace
-        else if (match("[^\t^\b^\n^\r^ ]"))
+        else if (match("(.)"))
             //emit token
             return chars.emit(Token.Type.OPERATOR);
         throw new ParseException("invalid", chars.index);
