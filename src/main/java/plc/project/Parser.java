@@ -1,5 +1,7 @@
 package plc.project;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -145,35 +147,47 @@ public final class Parser {
      * Parses the {@code expression} rule.
      */
     public Ast.Expression parseExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        return parseLogicalExpression();
     }
 
     /**
      * Parses the {@code logical-expression} rule.
      */
     public Ast.Expression parseLogicalExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if(tokens.has(0)) {
+            return parseComparisonExpression();
+        }
+        throw new ParseException("Parsing out of range", tokens.index);  
     }
 
     /**
      * Parses the {@code equality-expression} rule.
      */
     public Ast.Expression parseComparisonExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if(tokens.has(0)) {
+            return parseAdditiveExpression();
+        }
+        throw new ParseException("Parsing out of range", tokens.index);  
     }
 
     /**
      * Parses the {@code additive-expression} rule.
      */
     public Ast.Expression parseAdditiveExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if(tokens.has(0)) {
+            return parseMultiplicativeExpression();
+        }
+        throw new ParseException("Parsing out of range", tokens.index);  
     }
 
     /**
      * Parses the {@code multiplicative-expression} rule.
      */
     public Ast.Expression parseMultiplicativeExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if(tokens.has(0)) {
+            return parsePrimaryExpression();
+        }
+        throw new ParseException("Parsing out of range", tokens.index);  
     }
 
     /**
@@ -183,7 +197,20 @@ public final class Parser {
      * not strictly necessary.
      */
     public Ast.Expression parsePrimaryExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if(tokens.has(0)) {
+            String currentToken = tokens.get(0).getLiteral();
+
+            if (match("NIL")) return new Ast.Expression.Literal(null);
+            else if (match("TRUE")) return new Ast.Expression.Literal(true);
+            else if (match("FALSE")) return new Ast.Expression.Literal(false);
+            else if (match(Token.Type.INTEGER)) {
+                return new Ast.Expression.Literal(new BigInteger(currentToken));
+            } else if (match(Token.Type.DECIMAL)) {
+                return new Ast.Expression.Literal(new BigDecimal(currentToken));
+            }
+            else throw new ParseException("Invalid primary expression token", tokens.index);
+        }
+        throw new ParseException("Parsing out of range", tokens.index);    
     }
 
     /**
