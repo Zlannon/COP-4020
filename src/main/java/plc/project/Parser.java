@@ -196,17 +196,17 @@ public final class Parser {
     public Ast.Expression parseLogicalExpression() throws ParseException {
         try {
             //return comparison expression
-            Ast.Expression fullExpr = parseComparisonExpression();
+            Ast.Expression fullExpression = parseComparisonExpression();
             //check for logical characters
             while (match("&&") || match("||")) {
                 //get operation and right expression
                 String operation = tokens.get(-1).getLiteral();
-                Ast.Expression rightExpressionession = parseComparisonExpression();
+                Ast.Expression rightExpression = parseComparisonExpression();
                 //set full expression to binary
-                fullExpr = new Ast.Expression.Binary(operation, fullExpr, rightExpressionession);
+                fullExpression = new Ast.Expression.Binary(operation, fullExpression, rightExpression);
             }
             //return expression
-            return fullExpr;
+            return fullExpression;
         } catch(ParseException p) {
             throw new ParseException(p.getMessage(), p.getIndex());
         }
@@ -218,16 +218,16 @@ public final class Parser {
     public Ast.Expression parseComparisonExpression() throws ParseException {
         try {
             //return additive expression
-            Ast.Expression fullExpr = parseAdditiveExpression();
+            Ast.Expression fullExpression = parseAdditiveExpression();
             //check for comparison characters
             while(match("<") || match(">") || match("==") || match("!=")) {
                 //get operation and right expression
                 String operation = tokens.get(-1).getLiteral();
                 Ast.Expression rightExpression = parseComparisonExpression();
                 //set full expression to binary
-                fullExpr = new Ast.Expression.Binary(operation, fullExpr, rightExpression);
+                fullExpression = new Ast.Expression.Binary(operation, fullExpression, rightExpression);
             }
-            return fullExpr;
+            return fullExpression;
         } catch (ParseException p) {
             throw new ParseException(p.getMessage(), p.getIndex());
         }
@@ -239,17 +239,17 @@ public final class Parser {
     public Ast.Expression parseAdditiveExpression() throws ParseException {
         try {
             //return multiplicative expression
-            Ast.Expression fullExpr = parseMultiplicativeExpression();
+            Ast.Expression fullExpression = parseMultiplicativeExpression();
             //check for additive characters
             while(match("+") || match("-")) {
                 //get operation and right expression
                 String operation = tokens.get(-1).getLiteral();
                 Ast.Expression rightExpression = parseMultiplicativeExpression();
                 //set full expression to binary
-                fullExpr = new Ast.Expression.Binary(operation, fullExpr, rightExpression);
+                fullExpression = new Ast.Expression.Binary(operation, fullExpression, rightExpression);
             }
             //return expression
-            return fullExpr;
+            return fullExpression;
         } catch (ParseException p) {
             throw new ParseException(p.getMessage(), p.getIndex());
         }
@@ -261,17 +261,17 @@ public final class Parser {
     public Ast.Expression parseMultiplicativeExpression() throws ParseException {
         try {
             //return primary expression
-            Ast.Expression fullExpr = parsePrimaryExpression();
+            Ast.Expression fullExpression = parsePrimaryExpression();
             //check for multiplicative characters
             while(match("/") || match("*") || match("^")) {
                 //get operation and left expression
                 String operation = tokens.get(-1).getLiteral();
                 Ast.Expression rightExpression = parsePrimaryExpression();
                 //set full expression to binary operation
-                fullExpr = new Ast.Expression.Binary(operation, fullExpr, rightExpression);
+                fullExpression = new Ast.Expression.Binary(operation, fullExpression, rightExpression);
             }
             //return expression
-            return fullExpr;
+            return fullExpression;
         } catch (ParseException p) {
             throw new ParseException(p.getMessage(), p.getIndex());
         }
