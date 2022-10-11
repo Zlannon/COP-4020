@@ -220,7 +220,7 @@ public final class Parser {
             //return additive expression
             Ast.Expression fullExpr = parseAdditiveExpression();
             //check for comparison characters
-            while(match("!=") || match("==") || match("<") || match(">")) {
+            while(match("<") || match(">") || match("==") || match("!=")) {
                 //get operation and right expression
                 String operation = tokens.get(-1).getLiteral();
                 Ast.Expression rightExpression = parseComparisonExpression();
@@ -346,12 +346,12 @@ public final class Parser {
                     if (match(")")) {
                         return new Ast.Expression.Function(name, args);
                     } else {
-                        throw new ParseException("Need closing parenthesis", tokens.get(-1).getIndex());
+                        throw new ParseException("Need closing parenthesis", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
                     }
                 } else {
                     //check for ending parenthesis
                     if (!tokens.get(-1).getLiteral().equals(")")) {
-                        throw new ParseException("Need closing parenthesis", tokens.get(-1).getIndex());
+                        throw new ParseException("Need closing parenthesis", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
                     } else {
                         return new Ast.Expression.Function(name, Collections.emptyList());
                     }
@@ -365,12 +365,12 @@ public final class Parser {
                     if (match("]")) {
                         return new Ast.Expression.Access(Optional.of(expression), name);
                     } else {
-                        throw new ParseException("Need closing brace", tokens.get(-1).getIndex());
+                        throw new ParseException("Need closing brace", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
                     }
                 } else {
                     //check for closing brace
                     if (!tokens.get(-1).getLiteral().equals("]")) {
-                        throw new ParseException("Need closing brace", tokens.get(-1).getIndex());
+                        throw new ParseException("Need closing brace", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
                     } else {
                         return new Ast.Expression.Access(Optional.empty(), name);
                     }
@@ -384,13 +384,13 @@ public final class Parser {
             Ast.Expression expression = parseExpression();
             //check for closing parenthesis
             if(!match(")")) {
-                throw new ParseException("Need closing parenthesis", tokens.get(-1).getIndex());
+                throw new ParseException("Need closing parenthesis", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
             }
             //return group expression
             return new Ast.Expression.Group(expression);
         } else {
             //throw parse exception if no valid primary expressions
-            throw new ParseException("Invalid primary expression", tokens.get(-1).getIndex());
+            throw new ParseException("Invalid primary expression", tokens.get(0).getIndex());
         }
     }
 
