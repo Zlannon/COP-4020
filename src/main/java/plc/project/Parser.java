@@ -105,7 +105,7 @@ public final class Parser {
                 if(!match("=")) {
                     //check for semi colon
                     if(!match(";")) {
-                        throw new ParseException("Expected ;", tokens.get(-1).getIndex());
+                        throw new ParseException("Expected ;", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
                     }
                     //return statement
                     return new Ast.Statement.Expression(lhs);
@@ -114,7 +114,7 @@ public final class Parser {
                 Ast.Expression rhs = parseExpression();
                 //check for semi colon
                 if(!match(";")) {
-                    throw new ParseException("Expected ;", tokens.get(-1).getIndex());
+                    throw new ParseException("Expected ;", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
                 }
                 //return statement
                 return new Ast.Statement.Assignment(lhs, rhs);
