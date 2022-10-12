@@ -130,7 +130,24 @@ public final class Parser {
      * statement, aka {@code LET}.
      */
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        try {
+            if (match(Token.Type.IDENTIFIER)) {
+                String lhs = tokens.get(-1).getLiteral();
+                Optional<Ast.Expression> rhs = Optional.empty();
+                if (match("=")) rhs = Optional.of(parseExpression());
+
+                // check for semi colon
+                if (!match(";")) {
+                    throw new ParseException("Expected ;", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+                }
+
+                return new Ast.Statement.Declaration(lhs, rhs);
+            } else {
+                throw new ParseException("Missing identifier", tokens.index);
+            }
+        } catch (ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+        }
     }
 
     /**
@@ -175,7 +192,15 @@ public final class Parser {
      * {@code RETURN}.
      */
     public Ast.Statement.Return parseReturnStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        try {
+            Ast.Expression expression = parseExpression();
+            if (!match(";")) {
+                throw new ParseException("Expected ;", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+            }
+            return new Ast.Statement.Return(expression);
+        } catch (ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+        }    
     }
 
     /**
