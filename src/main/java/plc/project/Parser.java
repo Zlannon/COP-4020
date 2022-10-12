@@ -143,7 +143,7 @@ public final class Parser {
 
                 return new Ast.Statement.Declaration(lhs, rhs);
             } else {
-                throw new ParseException("Missing identifier", tokens.index);
+                throw new ParseException("Missing identifier", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
             }
         } catch (ParseException p) {
             throw new ParseException(p.getMessage(), p.getIndex());
@@ -183,7 +183,21 @@ public final class Parser {
      * {@code WHILE}.
      */
     public Ast.Statement.While parseWhileStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        try {
+            Ast.Expression expression = parseExpression();
+            if (!match("DO"))
+                throw new ParseException("Missing DO", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+
+            List<Ast.Statement> statements = new LinkedList<>();
+            while (!match("END")) {
+                statements.add(parseStatement());
+            }
+
+            return new Ast.Statement.While(expression, statements);
+        } catch (ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+
+        }
     }
 
     /**
