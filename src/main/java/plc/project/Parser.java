@@ -37,7 +37,20 @@ public final class Parser {
      * next tokens start a global, aka {@code LIST|VAL|VAR}.
      */
     public Ast.Global parseGlobal() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        try {
+            // Need to check end of TokenStream if there is a ;, if not throw a ParseException
+            if(match("LIST")) {
+                return parseList();
+            } else if (match("VAR")) {
+                return parseMutable();
+            } else if (match("VAL")) {
+                return parseImmutable();
+            } else {
+                throw new ParseException("Expected list, mutable, or immutable", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+            }
+        } catch (ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+        }
     }
 
     /**
