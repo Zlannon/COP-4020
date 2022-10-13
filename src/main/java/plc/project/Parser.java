@@ -70,7 +70,27 @@ public final class Parser {
      * next token declares a mutable global variable, aka {@code VAR}.
      */
     public Ast.Global parseMutable() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        try {
+            if (match(Token.Type.IDENTIFIER))  {
+                //get left hand side
+                String lhs = tokens.get(-1).getLiteral();
+                //check for equal
+                if(!match("=")) {
+                    //return statement
+                    return new Ast.Global(lhs, true, Optional.empty());
+                }
+
+                //get right hand side
+                Optional<Ast.Expression> rhs = Optional.of(parseExpression());
+                
+                //return statement
+                return new Ast.Global(lhs, true, Optional.empty());
+            } else {
+                throw new ParseException("Missing identifier", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+            }
+        } catch (ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+        }
     }
 
     /**
@@ -106,7 +126,16 @@ public final class Parser {
      * preceding token indicates the opening a block.
      */
     public List<Ast.Statement> parseBlock() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        try {
+            List<Ast.Statement> statements = new ArrayList<>();
+            while (!match("END")) {
+                statements.add(parseStatement());
+            }
+
+            return statements;
+        } catch (ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+        }
     }
 
     /**
@@ -217,10 +246,7 @@ public final class Parser {
             if (!match("DO"))
                 throw new ParseException("Missing DO", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
 
-            List<Ast.Statement> statements = new ArrayList<>();
-            while (!match("END")) {
-                statements.add(parseStatement());
-            }
+            List<Ast.Statement> statements = parseBlock();
 
             return new Ast.Statement.While(expression, statements);
         } catch (ParseException p) {
