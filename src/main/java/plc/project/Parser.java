@@ -188,7 +188,7 @@ public final class Parser {
             if (!match("DO"))
                 throw new ParseException("Missing DO", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
 
-            List<Ast.Statement> statements = new LinkedList<>();
+            List<Ast.Statement> statements = new ArrayList<>();
             while (!match("END")) {
                 statements.add(parseStatement());
             }
