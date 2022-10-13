@@ -29,7 +29,11 @@ public final class Parser {
      * Parses the {@code source} rule.
      */
     public Ast.Source parseSource() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        // Needs logic to match based on if it is ( 'LIST' | 'VAR' | 'VAL') for parseGlobal or 'FUN' for parseFunction
+        List<Ast.Global> globals = new ArrayList<>();
+        List<Ast.Function> functions = new ArrayList<>();
+
+        return new Ast.Source(globals, functions);    
     }
 
     /**
@@ -74,7 +78,19 @@ public final class Parser {
      * next token declares an immutable global variable, aka {@code VAL}.
      */
     public Ast.Global parseImmutable() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        try {
+            if (match(Token.Type.IDENTIFIER)) {
+                String lhs = tokens.get(-1).getLiteral();
+                Optional<Ast.Expression> rhs = Optional.of(parseExpression());
+
+
+                return new Ast.Global(lhs, false, rhs);
+            } else {
+                throw new ParseException("Missing identifier", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+            }
+        } catch (ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+        }
     }
 
     /**
