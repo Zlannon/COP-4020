@@ -29,11 +29,21 @@ public final class Parser {
      * Parses the {@code source} rule.
      */
     public Ast.Source parseSource() throws ParseException {
-        // Needs logic to match based on if it is ( 'LIST' | 'VAR' | 'VAL') for parseGlobal or 'FUN' for parseFunction
-        List<Ast.Global> globals = new ArrayList<>();
-        List<Ast.Function> functions = new ArrayList<>();
+        try {
+            List<Ast.Global> globals = new ArrayList<>();
+            List<Ast.Function> functions = new ArrayList<>();
 
-        return new Ast.Source(globals, functions);    
+            if (tokens.has(0)) {
+                if (peek("LIST") || peek("VAR") || peek("VAL")) {
+                    globals.add(parseGlobal());
+                } else if (match("FUN")) {
+                    functions.add(parseFunction());
+                }
+            }
+            return new Ast.Source(globals, functions);
+        } catch (ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+        }
     }
 
     /**
@@ -84,7 +94,7 @@ public final class Parser {
                 Optional<Ast.Expression> rhs = Optional.of(parseExpression());
                 
                 //return statement
-                return new Ast.Global(lhs, true, Optional.empty());
+                return new Ast.Global(lhs, true, rhs);
             } else {
                 throw new ParseException("Missing identifier", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
             }
@@ -101,9 +111,12 @@ public final class Parser {
         try {
             if (match(Token.Type.IDENTIFIER)) {
                 String lhs = tokens.get(-1).getLiteral();
+                if(!match("=")) {
+                    //return statement
+                    throw new ParseException("Expected '='", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+                }
+
                 Optional<Ast.Expression> rhs = Optional.of(parseExpression());
-
-
                 return new Ast.Global(lhs, false, rhs);
             } else {
                 throw new ParseException("Missing identifier", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
@@ -118,7 +131,43 @@ public final class Parser {
      * next tokens start a method, aka {@code FUN}.
      */
     public Ast.Function parseFunction() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        try {
+            if(match(Token.Type.IDENTIFIER)) {
+                String funName = tokens.get(-1).getLiteral();
+
+                if(match("(")) {
+                    List<String> parameters = new ArrayList<>();
+
+                    while(match(Token.Type.IDENTIFIER)) {
+                        parameters.add(tokens.get(-1).getLiteral());
+                        if(!match(",")) {
+                            if(!peek(")")) {
+                                throw new ParseException("Expected comma", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+                            }
+                        }
+                    }
+                    if(!match(")")) {
+                        throw new ParseException("Expected parenthesis", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+                    }
+
+                    if(!match("DO")) {
+                        throw new ParseException("Expected DO", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+                    }
+
+                    List<Ast.Statement> statements = parseBlock();
+                    if(!tokens.get(-1).getLiteral().equals("END")) {
+                        throw new ParseException("Expected END", tokens.get(-1).getIndex());
+                    }
+                    return new Ast.Function(funName, parameters, statements);
+                } else {
+                    throw new ParseException("Expected parenthesis", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+                }
+            } else {
+                throw new ParseException("Expected identifier", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+            }
+        } catch (ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+        }
     }
 
     /**
@@ -149,7 +198,7 @@ public final class Parser {
             if(match("LET")) {
                 return parseDeclarationStatement();
             } else if (match("SWITCH")) {
-                return parseCaseStatement();
+                return parseSwitchStatement();
             } else if (match("IF")) {
                 return parseIfStatement();
             } else if (match("WHILE")) {
