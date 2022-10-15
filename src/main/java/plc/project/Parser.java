@@ -72,7 +72,24 @@ public final class Parser {
      * next token declares a list, aka {@code LIST}.
      */
     public Ast.Global parseList() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        try {
+            if(match(Token.Type.IDENTIFIER)) {
+                String lhs = tokens.get(-1).getLiteral();
+                if(!match("=")) {
+                    throw new ParseException("Expected '='", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+                }
+                if(!match("[")) {
+                    throw new ParseException("Expected '['", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+                }
+                List<Ast.Expression> test = new ArrayList<>();
+                Optional<Ast.Expression.PlcList> list = Optional.of(new Ast.Expression.PlcList(test));
+                return new Ast.Global(lhs, true, list);
+            } else {
+                throw new ParseException("Missing Identifier", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+            }
+        } catch (ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+        }
     }
 
     /**
@@ -281,7 +298,23 @@ public final class Parser {
      * {@code SWITCH}.
      */
     public Ast.Statement.Switch parseSwitchStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        try {
+            Ast.Expression expression = parseExpression();
+            List<Ast.Statement.Case> cases = new ArrayList<>();
+            while(match("CASE")) {
+                cases.add(parseCaseStatement());
+            }
+            if(!match("DEFAULT")) {
+                throw new ParseException("Expected 'DEFAULT'", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+            }
+            cases.add(new Ast.Statement.Case(Optional.empty(), parseBlock()));
+            if(!match("END")) {
+                throw new ParseException("Expected 'END'", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+            }
+            return new Ast.Statement.Switch(expression, cases);
+        } catch (ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+        }
     }
 
     /**
@@ -290,7 +323,11 @@ public final class Parser {
      * default block of a switch statement, aka {@code CASE} or {@code DEFAULT}.
      */
     public Ast.Statement.Case parseCaseStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Optional<Ast.Expression> caseExpr = Optional.of(parseExpression());
+        if(!match(":")) {
+            throw new ParseException("Expected ':'", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+        }
+        return new Ast.Statement.Case(caseExpr, parseBlock());
     }
 
     /**
