@@ -89,6 +89,9 @@ public final class Parser {
                 while (match(",")) {
                     exprs.add(parseExpression());
                 }
+                if(!match("]")) {
+                    throw new ParseException("Expected ']'", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+                }
                 Optional<Ast.Expression> list = Optional.of(new Ast.Expression.PlcList(exprs));
                 return new Ast.Global(lhs, true, list);
             } else {
