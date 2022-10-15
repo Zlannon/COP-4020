@@ -81,8 +81,15 @@ public final class Parser {
                 if(!match("[")) {
                     throw new ParseException("Expected '['", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
                 }
-                List<Ast.Expression> test = new ArrayList<>();
-                Optional<Ast.Expression.PlcList> list = Optional.of(new Ast.Expression.PlcList(test));
+                Ast.Expression initialExpression = parseExpression();
+                List<Ast.Expression> exprs = new ArrayList<>();
+                exprs.add(initialExpression);
+
+                //add expressions until no more commas
+                while (match(",")) {
+                    exprs.add(parseExpression());
+                }
+                Optional<Ast.Expression> list = Optional.of(new Ast.Expression.PlcList(exprs));
                 return new Ast.Global(lhs, true, list);
             } else {
                 throw new ParseException("Missing Identifier", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
