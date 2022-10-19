@@ -44,11 +44,20 @@ public final class Parser {
             List<Ast.Global> globals = new ArrayList<>();
             List<Ast.Function> functions = new ArrayList<>();
 
-            if (tokens.has(0)) {
+            while (tokens.has(0)) {
                 if (peek("LIST") || peek("VAR") || peek("VAL")) {
                     globals.add(parseGlobal());
-                } else if (match("FUN")) {
+                    if (!match(";")) {
+                        throw handleError("Expected ';'");
+                    }
+                }
+
+                else if (match("FUN")) {
                     functions.add(parseFunction());
+
+                    if (peek("LIST") || peek("VAR") || peek("VAL")) {
+                        throw handleError("Globals cannot come after functions");
+                    }
                 }
             }
             return new Ast.Source(globals, functions);
@@ -130,7 +139,7 @@ public final class Parser {
 
                 //get right hand side
                 Optional<Ast.Expression> rhs = Optional.of(parseExpression());
-                
+
                 //return statement
                 return new Ast.Global(lhs, true, rhs);
             } else {
@@ -388,7 +397,7 @@ public final class Parser {
             return new Ast.Statement.Return(expression);
         } catch (ParseException p) {
             throw new ParseException(p.getMessage(), p.getIndex());
-        }    
+        }
     }
 
     /**
@@ -504,27 +513,27 @@ public final class Parser {
         if(match("NIL")) {
             //return null expression
             return new Ast.Expression.Literal(null);
-        //check for true
+            //check for true
         } else if (match("TRUE")) {
             //return true expression
             return new Ast.Expression.Literal(true);
-        //check for false
+            //check for false
         } else if (match("FALSE")) {
             //return false expression
             return new Ast.Expression.Literal(false);
-        //check for int token
+            //check for int token
         } else if (match(Token.Type.INTEGER)) {
             //return BigInteger token
             return new Ast.Expression.Literal(new BigInteger(tokens.get(-1).getLiteral()));
-        //check for decimal token
+            //check for decimal token
         } else if (match(Token.Type.DECIMAL)) {
             //return BigDecimal token
             return new Ast.Expression.Literal(new BigDecimal(tokens.get(-1).getLiteral()));
-        //check for character token
+            //check for character token
         } else if (match(Token.Type.CHARACTER)) {
             //return character token
             return new Ast.Expression.Literal(tokens.get(-1).getLiteral().charAt(1));
-        //check for string token
+            //check for string token
         } else if (match(Token.Type.STRING)) {
             //grab the literal
             String str = tokens.get(-1).getLiteral();
@@ -532,16 +541,16 @@ public final class Parser {
             //change the \\ to proper escape characters
             if(str.contains("\\")) {
                 str = str.replace("\\n", "\n")
-                         .replace("\\t", "\t")
-                         .replace("\\b", "\b")
-                         .replace("\\r", "\r")
-                         .replace("\\'", "'")
-                         .replace("\\\\", "\\")
-                         .replace("\\\"", "\"");
+                        .replace("\\t", "\t")
+                        .replace("\\b", "\b")
+                        .replace("\\r", "\r")
+                        .replace("\\'", "'")
+                        .replace("\\\\", "\\")
+                        .replace("\\\"", "\"");
             }
             //return string expression
             return new Ast.Expression.Literal(str);
-        //Check for identifier token
+            //Check for identifier token
         } else if (match(Token.Type.IDENTIFIER)) {
             //get literal
             String name = tokens.get(-1).getLiteral();
@@ -572,7 +581,7 @@ public final class Parser {
                         return new Ast.Expression.Function(name, Collections.emptyList());
                     }
                 }
-            //check for brace
+                //check for brace
             } else if (match("[")){
                 //check for no expression
                 if (!match("]")) {
@@ -595,7 +604,7 @@ public final class Parser {
                 //return empty if no braces or parenthesis
                 return new Ast.Expression.Access(Optional.empty(), name);
             }
-        //check for group expression        
+            //check for group expression
         } else if (match("(")) {
             Ast.Expression expression = parseExpression();
             //check for closing parenthesis
