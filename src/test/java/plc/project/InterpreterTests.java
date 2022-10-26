@@ -363,6 +363,14 @@ final class InterpreterTests {
                         ),
                         BigInteger.valueOf(11)
                 ),
+                // 2 ^ 4
+                Arguments.of("exponent",
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(new BigInteger("2")),
+                                new Ast.Expression.Literal(new BigInteger("4"))
+                        ),
+                        new BigInteger("16")
+                ),
                 // 1.2 / 3.4
                 Arguments.of("Division",
                         new Ast.Expression.Binary("/",
