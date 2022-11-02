@@ -99,12 +99,12 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Assignment ast) {
-        Ast.Expression access = ast.getReceiver();
-        if(access instanceof Ast.Expression.Access) {
-            if(((Ast.Expression.Access) access).getOffset().isPresent()) {
-                //TODO: List access
+        Ast.Expression.Access accessExpression = (Ast.Expression.Access) ast.getReceiver();
+        if(accessExpression instanceof Ast.Expression.Access) {
+            if((accessExpression).getOffset().isPresent()) {
+                //TODO: list access
             } else {
-                scope.lookupVariable(((Ast.Expression.Access) access).getName()).setValue(visit(ast.getValue()));
+                scope.lookupVariable((accessExpression).getName()).setValue(visit(ast.getValue()));
             }
         }
         return Environment.NIL;
