@@ -379,7 +379,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.PlcList ast) {
-        return Environment.NIL;
+        List<Object> list = new ArrayList<>();
+        for(int i = 0; i < ast.getValues().size(); i++) {
+            list.add(visit(ast.getValues().get(i)).getValue());
+        }
+        return new Environment.PlcObject(new Scope(null), list);
     }
 
     /**
