@@ -102,7 +102,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         Ast.Expression.Access accessExpression = (Ast.Expression.Access) ast.getReceiver();
         if(accessExpression instanceof Ast.Expression.Access) {
             if((accessExpression).getOffset().isPresent()) {
-                //TODO: list access
+                List<Object> obj = Arrays.asList();
+                obj = requireType(obj.getClass(), scope.lookupVariable(accessExpression.getName()).getValue());
+                BigInteger val = (requireType(BigInteger.class, visit(accessExpression.getOffset().get())));
+                obj.set(val.intValue(), visit(ast.getValue()).getValue());
+                scope.lookupVariable(accessExpression.getName()).setValue(Environment.create(obj));
             } else {
                 scope.lookupVariable((accessExpression).getName()).setValue(visit(ast.getValue()));
             }
@@ -138,6 +142,12 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         //TODO
         try {
             scope = new Scope(scope);
+            Ast.Statement.Case test = ast.getCases().get(0);
+            for(Ast.Statement.Case obj : ast.getCases()) {
+                if(obj.getValue().isPresent() && visit(ast.getCondition()).getValue().equals(visit(obj.getValue().get()).getValue())) {
+                    visit(obj);
+                }
+            }
         } finally {
             scope = scope.getParent();
         }
@@ -146,7 +156,10 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Case ast) {
-        return Environment.NIL; //TODO
+        for(int i = 0; i < ast.getStatements().size(); i++) {
+            visit(ast.getStatements().get(i));
+        }
+        return Environment.NIL;
     }
 
     @Override
@@ -362,8 +375,12 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Access ast) {
-        if(ast.getOffset().isPresent())
-            return Environment.NIL; //TODO: List implementation
+        if(ast.getOffset().isPresent()) {
+            List<Environment.PlcObject> obj = Arrays.asList();
+            obj = requireType(obj.getClass(), scope.lookupVariable(ast.getName()).getValue());
+            BigInteger val = (requireType(BigInteger.class, visit(ast.getOffset().get())));
+            return new Environment.PlcObject(scope, obj.get(val.intValue()));
+        }
         return scope.lookupVariable(ast.getName()).getValue();
     }
 
