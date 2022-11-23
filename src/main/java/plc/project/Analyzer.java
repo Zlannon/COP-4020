@@ -55,6 +55,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
             //visit val
             visit(val);
             //validate
+            if(val.getType().equals(Environment.NIL)) {
+                throw new RuntimeException("Invalid type");
+            }
             requireAssignable(val.getType(), type);
         }
         //set variable
@@ -438,7 +441,15 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.PlcList ast) {
-        //validate all values in list
+        //set ast type to first value in list
+        if(!ast.getValues().isEmpty()) {
+            visit(ast.getValues().get(0));
+            ast.setType(ast.getValues().get(0).getType());
+        } else {
+            ast.setType(Environment.NIL.getType());
+            return null;
+        }
+        //validate all other values
         for(Ast.Expression expr : ast.getValues()) {
             visit(expr);
             requireAssignable(expr.getType(), ast.getType());
