@@ -52,21 +52,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
             //get val and type
             Ast.Expression val = ast.getValue().get();
             Environment.Type type = Environment.getType(ast.getTypeName());
-
-            //check for all types in Environment
-            if(val.getType() == type
-                    || type == Environment.Type.ANY
-                    || (type == Environment.Type.COMPARABLE && (val.getType() == Environment.Type.INTEGER
-                    || val.getType() == Environment.Type.DECIMAL
-                    || val.getType() == Environment.Type.STRING
-                    || val.getType() == Environment.Type.CHARACTER)))
-            {
-                //visit value
-                visit(val);
-            } else {
-                //else throw runtime exception
-                throw new RuntimeException();
-            }
+            //visit val
+            visit(val);
+            //validate
+            requireAssignable(val.getType(), type);
         }
         //set variable
         ast.setVariable(scope.defineVariable(ast.getName(),ast.getName(),Environment.getType(ast.getTypeName()),ast.getMutable(),Environment.NIL));
@@ -252,15 +241,16 @@ public final class Analyzer implements Ast.Visitor<Void> {
         visit(ast.getCondition());
         //ensure condition is type boolean
         if(ast.getCondition().getType() != Environment.Type.BOOLEAN) {
-            //visit statements in new scope
-            try {
-                scope = new Scope(scope);
-                for (Ast.Statement statement : ast.getStatements()) {
-                    visit(statement);
-                }
-            } finally {
-                scope = scope.getParent();
+            throw new RuntimeException("Expected boolean condition");
+        }
+        //visit statements in new scope
+        try {
+            scope = new Scope(scope);
+            for (Ast.Statement statement : ast.getStatements()) {
+                visit(statement);
             }
+        } finally {
+            scope = scope.getParent();
         }
         //return null
         return null;
@@ -448,7 +438,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.PlcList ast) {
-        return null; //TODO
+        //validate all values in list
+        for(Ast.Expression expr : ast.getValues()) {
+            visit(expr);
+            requireAssignable(expr.getType(), ast.getType());
+        }
+        //return null
+        return null;
     }
 
     public static void requireAssignable(Environment.Type target, Environment.Type type) {
