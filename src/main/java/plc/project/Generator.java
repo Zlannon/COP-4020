@@ -1,6 +1,7 @@
 package plc.project;
 
 import java.io.PrintWriter;
+import java.util.List;
 
 public final class Generator implements Ast.Visitor<Void> {
 
@@ -30,32 +31,147 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
-        throw new UnsupportedOperationException(); //TODO
+        //print 'public class Main {'
+        print("public class Main {");
+        //newlines
+        newline(indent);
+        newline(++indent);
+        //print all globals
+        for(Ast.Global global : ast.getGlobals()) {
+            print(global);
+            newline(indent);
+        }
+        //print 'public static void main(String[] args) {'
+        print("public static void main(String[] args) {");
+        //indented newline
+        newline(++indent);
+        //print 'System.exit(new Main().main());'
+        print("System.exit(new Main().main());");
+        //unindented newline
+        newline(--indent);
+        //print }
+        print("}");
+
+        //for all functions
+        for(Ast.Function function : ast.getFunctions()) {
+            //unindented newline
+            newline(--indent);
+            //indented newline
+            newline(++indent);
+            //print function
+            print(function);
+        }
+        //unindented newline
+        newline(--indent);
+        //newline
+        newline(indent);
+        //print }
+        print("}");
+        return null;
     }
 
     @Override
     public Void visit(Ast.Global ast) {
-        throw new UnsupportedOperationException(); //TODO
+        //check if immutable
+        if(!ast.getMutable()) {
+            //print final modifier
+            print("final ");
+        }
+        //print type
+        print(Environment.getType(ast.getTypeName()).getJvmName());
+        //check for list
+        if (ast.getVariable().getJvmName().equals("list")) {
+            //print [] if list
+            print("[]");
+        }
+        //print name
+        print(" ", ast.getName());
+        //check for value
+        if(ast.getValue().isPresent()) {
+            //print '= value' if exists
+            print(" = ");
+            print(ast.getValue().get());
+        }
+        //print ;
+        print(";");
+        return null;
     }
 
     @Override
     public Void visit(Ast.Function ast) {
-        throw new UnsupportedOperationException(); //TODO
+        //check for return type name
+        if(ast.getReturnTypeName().isPresent()) {
+            //print if exists
+            print(Environment.getType(ast.getReturnTypeName().get()).getJvmName());
+        }
+        //print space and name along with (
+        print(" ", ast.getName(), "(");
+        //check if parameters exist and print them comma separated
+        if(ast.getParameters().size() == ast.getParameterTypeNames().size() && ast.getParameters().size() > 0) {
+            for(int i = 0; i < ast.getParameters().size(); i++) {
+                print(Environment.getType(ast.getParameterTypeNames().get(i)).getJvmName(), " ", ast.getParameters().get(i), ", ");
+            }
+            print(Environment.getType(ast.getParameterTypeNames().get(ast.getParameterTypeNames().size() - 1)).getJvmName(), " ", ast.getParameters().get(ast.getParameters().size() - 1));
+        }
+        //print closing ) and opening {
+        print(") {");
+        //check for statements
+        if(!ast.getStatements().isEmpty()) {
+            indent++;
+            //print all statements
+            for(Ast.Statement statement : ast.getStatements()) {
+                newline(indent);
+                print(statement);
+            }
+            newline(--indent);
+        }
+        //closing }
+        print("}");
+        return null;
     }
 
     @Override
     public Void visit(Ast.Statement.Expression ast) {
+        //print expression with ;
         print(ast.getExpression(), ';');
         return null;
     }
 
     @Override
     public Void visit(Ast.Statement.Declaration ast) {
-        throw new UnsupportedOperationException(); //TODO
+        //if typename exists
+        if(ast.getTypeName().isPresent()) {
+            //print typename
+            print(Environment.getType(ast.getTypeName().get()).getJvmName());
+        } else {
+            //check for value
+            if(ast.getValue().isPresent()) {
+                //print value if exists
+                print(ast.getValue().get().getType().getJvmName());
+            } else {
+                //else throw runtime exception
+                throw new RuntimeException();
+            }
+        }
+
+        //print space then name
+        print(" ", ast.getName());
+
+        //check for value
+        if(ast.getValue().isPresent()) {
+            //print '= value'
+            print(" = ");
+            print(ast.getValue().get());
+        }
+
+        //print ;
+        print(";");
+        return null;
     }
 
     @Override
     public Void visit(Ast.Statement.Assignment ast) {
+        //print receiver = value;
         print(ast.getReceiver(), " = ", ast.getValue(), ';');
         return null;
     }
@@ -103,11 +219,35 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.While ast) {
-        throw new UnsupportedOperationException(); //TODO
+        //print while
+        print("while (");
+        //print condition
+        print(ast.getCondition());
+        //print ) {
+        print(") {");
+        //increase indent
+        indent++;
+
+        //check if statements exist
+        if(!ast.getStatements().isEmpty()) {
+            //loop statements
+            for(Ast.Statement statement : ast.getStatements()) {
+                //newline for each
+                newline(indent);
+                //print statements
+                print(statement);
+            }
+            //newline subtract indent
+            newline(--indent);
+        }
+        //print closing bracket
+        print("}");
+        return null;
     }
 
     @Override
     public Void visit(Ast.Statement.Return ast) {
+        //print return statement
         print("return ", ast.getValue(), ';');
         return null;
     }
@@ -138,25 +278,54 @@ public final class Generator implements Ast.Visitor<Void> {
             return null;
         }
         print (ast.getLeft(), ' ', ast.getOperator(), ' ', ast.getRight());
-
         return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Access ast) {
-        // Need to add support for list access
+        //print variable jvm name
         print(ast.getVariable().getJvmName());
+        //if offset
+        if(ast.getOffset().isPresent()) {
+            //print brackets with offset in between
+            print("[", ast.getOffset().get(), "]");
+        }
         return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Function ast) {
-        throw new UnsupportedOperationException(); //TODO
+        //print function name with open parenthesis
+        print(ast.getFunction().getJvmName(), "(");
+        //check if arguments exist
+        if(ast.getArguments().size() > 0) {
+            //loop through arguments and print them comma separated
+            for(int i = 0; i < ast.getArguments().size() - 1; i++) {
+                visit(ast.getArguments().get(i));
+                print(",");
+            }
+            //print last argument
+            print(ast.getArguments().get(ast.getArguments().size() - 1));
+        }
+        //print closing parenthesis
+        print(")");
+        return null;
     }
 
     @Override
     public Void visit(Ast.Expression.PlcList ast) {
-        throw new UnsupportedOperationException(); //TODO
+        //print bracket
+        print("{");
+        //loop through values and print them comma separated
+        for(int i = 0; i < ast.getValues().size() - 1; i++) {
+            visit(ast.getValues().get(i));
+            print(", ");
+        }
+        //print last value
+        print(ast.getValues().get(ast.getValues().size() - 1));
+        //print closing bracket
+        print("}");
+        return null;
     }
 
 }
