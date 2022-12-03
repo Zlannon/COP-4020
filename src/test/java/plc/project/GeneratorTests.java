@@ -240,10 +240,14 @@ public class GeneratorTests {
                         "Math.pow(2, 3)"
                 ),
                 Arguments.of("Math pow plus 1",
-                        // Need to write then for this
                         // 2 ^ 3 + 1
-                        true,
-                        false
+                        init(new Ast.Expression.Binary("+",
+                                init(new Ast.Expression.Binary("^",
+                                        init(new Ast.Expression.Literal(2), ast -> ast.setType(Environment.Type.INTEGER)),
+                                        init(new Ast.Expression.Literal(3), ast -> ast.setType(Environment.Type.INTEGER))
+                                ), ast -> ast.setType(Environment.Type.STRING)),
+                                init(new Ast.Expression.Literal(1), ast -> ast.setType(Environment.Type.INTEGER))), ast -> ast.setType(Environment.Type.STRING)),
+                        "Math.pow(2, 3) + 1"
                 )
         );
     }
