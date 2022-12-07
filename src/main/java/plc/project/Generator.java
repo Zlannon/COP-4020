@@ -34,11 +34,18 @@ public final class Generator implements Ast.Visitor<Void> {
         //print 'public class Main {'
         print("public class Main {");
         //newlines
-        newline(indent);
+        newline(0);
         newline(++indent);
         //print all globals
-        for(Ast.Global global : ast.getGlobals()) {
-            print(global);
+        if(!ast.getGlobals().isEmpty()) {
+            for (int i = 0; i < ast.getGlobals().size(); i++) {
+                print(ast.getGlobals().get(i));
+                if(i == ast.getGlobals().size() - 1) {
+                    newline(0);
+                } else {
+                    newline(indent);
+                }
+            }
             newline(indent);
         }
         //print 'public static void main(String[] args) {'
@@ -55,16 +62,16 @@ public final class Generator implements Ast.Visitor<Void> {
         //for all functions
         for(Ast.Function function : ast.getFunctions()) {
             //unindented newline
-            newline(--indent);
+            newline(0);
             //indented newline
-            newline(++indent);
+            newline(indent);
             //print function
             print(function);
         }
         //unindented newline
-        newline(--indent);
+        newline(0);
         //newline
-        newline(indent);
+        newline(0);
         //print }
         print("}");
         return null;
@@ -80,7 +87,7 @@ public final class Generator implements Ast.Visitor<Void> {
         //print type
         print(Environment.getType(ast.getTypeName()).getJvmName());
         //check for list
-        if (ast.getVariable().getJvmName().equals("list")) {
+        if (ast.getVariable().getJvmName().equalsIgnoreCase("list")) {
             //print [] if list
             print("[]");
         }
@@ -102,13 +109,15 @@ public final class Generator implements Ast.Visitor<Void> {
         //check for return type name
         if(ast.getReturnTypeName().isPresent()) {
             //print if exists
-            print(Environment.getType(ast.getReturnTypeName().get()).getJvmName());
+            print(Environment.getType(ast.getReturnTypeName().get()).getJvmName(), " ");
+        } else {
+            print("void", " ");
         }
         //print space and name along with (
-        print(" ", ast.getName(), "(");
+        print(ast.getName(), "(");
         //check if parameters exist and print them comma separated
         if(ast.getParameters().size() == ast.getParameterTypeNames().size() && ast.getParameters().size() > 0) {
-            for(int i = 0; i < ast.getParameters().size(); i++) {
+            for(int i = 0; i < ast.getParameters().size() - 1; i++) {
                 print(Environment.getType(ast.getParameterTypeNames().get(i)).getJvmName(), " ", ast.getParameters().get(i), ", ");
             }
             print(Environment.getType(ast.getParameterTypeNames().get(ast.getParameterTypeNames().size() - 1)).getJvmName(), " ", ast.getParameters().get(ast.getParameters().size() - 1));
@@ -264,14 +273,16 @@ public final class Generator implements Ast.Visitor<Void> {
         //increase indent
         indent++;
         //loop statements
-        for(Ast.Statement statement : ast.getStatements()) {
-            //newline for each
-            newline(indent);
-            //print statements
-            print(statement);
+        if(!ast.getStatements().isEmpty()) {
+            for (Ast.Statement statement : ast.getStatements()) {
+                //newline for each
+                newline(indent);
+                //print statements
+                print(statement);
+            }
+            //newline subtract indent
+            newline(--indent);
         }
-        //newline subtract indent
-        newline(--indent);
         //print closing bracket
         print("}");
         return null;
