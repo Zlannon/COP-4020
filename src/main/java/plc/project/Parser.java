@@ -95,6 +95,13 @@ public final class Parser {
         try {
             if(match(Token.Type.IDENTIFIER)) {
                 String lhs = tokens.get(-1).getLiteral();
+                if(!match(":")) {
+                    throw handleError("Expected :");
+                }
+                if(!match(Token.Type.IDENTIFIER)) {
+                    throw handleError("Missing Identifier");
+                }
+                String type = tokens.get(-1).getLiteral();
                 if(!match("=")) {
                     throw handleError("Expected '='");
                 }
@@ -113,7 +120,7 @@ public final class Parser {
                     throw handleError("Expected ']'");
                 }
                 Optional<Ast.Expression> list = Optional.of(new Ast.Expression.PlcList(exprs));
-                return new Ast.Global(lhs, true, list);
+                return new Ast.Global(lhs, type, true, list);
             } else {
                 throw handleError("Missing Identifier");
             }
@@ -132,6 +139,13 @@ public final class Parser {
                 //get left hand side
                 String lhs = tokens.get(-1).getLiteral();
                 //check for equal
+                if(!match(":")) {
+                    throw handleError("Expected :");
+                }
+                if(!match(Token.Type.IDENTIFIER)) {
+                    throw handleError("Missing Identifier");
+                }
+                String type = tokens.get(-1).getLiteral();
                 if(!match("=")) {
                     //return statement
                     return new Ast.Global(lhs, true, Optional.empty());
@@ -141,7 +155,7 @@ public final class Parser {
                 Optional<Ast.Expression> rhs = Optional.of(parseExpression());
 
                 //return statement
-                return new Ast.Global(lhs, true, rhs);
+                return new Ast.Global(lhs, type, true, rhs);
             } else {
                 throw handleError("Missing identifier");
             }
@@ -158,13 +172,20 @@ public final class Parser {
         try {
             if (match(Token.Type.IDENTIFIER)) {
                 String lhs = tokens.get(-1).getLiteral();
+                if(!match(":")) {
+                    throw handleError("Expected :");
+                }
+                if(!match(Token.Type.IDENTIFIER)) {
+                    throw handleError("Missing Identifier");
+                }
+                String type = tokens.get(-1).getLiteral();
                 if(!match("=")) {
                     //return statement
                     throw handleError("Expected '='");
                 }
 
                 Optional<Ast.Expression> rhs = Optional.of(parseExpression());
-                return new Ast.Global(lhs, false, rhs);
+                return new Ast.Global(lhs, type, false, rhs);
             } else {
                 throw handleError("Missing identifier");
             }
@@ -181,12 +202,21 @@ public final class Parser {
         try {
             if(match(Token.Type.IDENTIFIER)) {
                 String funName = tokens.get(-1).getLiteral();
+                String funType = "";
 
                 if(match("(")) {
                     List<String> parameters = new ArrayList<>();
+                    List<String> parameterTypes = new ArrayList<>();
 
                     while(match(Token.Type.IDENTIFIER)) {
                         parameters.add(tokens.get(-1).getLiteral());
+                        if(!match(":")) {
+                            throw handleError("Expected :");
+                        }
+                        if(!match(Token.Type.IDENTIFIER)) {
+                            throw handleError("Missing Identifier");
+                        }
+                        parameterTypes.add(tokens.get(-1).getLiteral());
                         if(!match(",")) {
                             if(!peek(")")) {
                                 throw handleError("Expected comma");
@@ -197,6 +227,13 @@ public final class Parser {
                         throw handleError("Expected parenthesis");
                     }
 
+                    if(match(":")) {
+                        if(!match(Token.Type.IDENTIFIER)) {
+                            throw handleError("Expected Identifier");
+                        }
+                        funType = (tokens.get(-1).getLiteral());
+                    }
+
                     if(!match("DO")) {
                         throw handleError("Expected DO");
                     }
@@ -205,7 +242,7 @@ public final class Parser {
                     if(!tokens.get(-1).getLiteral().equals("END")) {
                         throw handleError("Expected END");
                     }
-                    return new Ast.Function(funName, parameters, statements);
+                    return new Ast.Function(funName, parameters, parameterTypes, Optional.of(funType), statements);
                 } else {
                     throw handleError("Expected parenthesis");
                 }
@@ -288,6 +325,13 @@ public final class Parser {
         try {
             if (match(Token.Type.IDENTIFIER)) {
                 String lhs = tokens.get(-1).getLiteral();
+                String type = "";
+                if(match(":")) {
+                    if(!match(Token.Type.IDENTIFIER)) {
+                        throw handleError("Expected Identifier");
+                    }
+                    type = tokens.get(-1).getLiteral();
+                }
                 Optional<Ast.Expression> rhs = Optional.empty();
                 if (match("=")) rhs = Optional.of(parseExpression());
 
@@ -295,8 +339,9 @@ public final class Parser {
                 if (!match(";")) {
                     throw handleError("Expected ;");
                 }
-
-                return new Ast.Statement.Declaration(lhs, rhs);
+                if(type.equals(""))
+                    return new Ast.Statement.Declaration(lhs, rhs);
+                return new Ast.Statement.Declaration(lhs, Optional.of(type), rhs);
             } else {
                 throw handleError("Missing identifier");
             }
