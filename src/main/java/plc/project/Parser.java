@@ -148,7 +148,7 @@ public final class Parser {
                 String type = tokens.get(-1).getLiteral();
                 if(!match("=")) {
                     //return statement
-                    return new Ast.Global(lhs, true, Optional.empty());
+                    return new Ast.Global(lhs, type, true, Optional.empty());
                 }
 
                 //get right hand side
@@ -200,6 +200,11 @@ public final class Parser {
      */
     public Ast.Function parseFunction() throws ParseException {
         try {
+            if(tokens.index == 0) {
+                if(!match("FUN")) {
+                    throw handleError("Expected FUN");
+                }
+            }
             if(match(Token.Type.IDENTIFIER)) {
                 String funName = tokens.get(-1).getLiteral();
                 String funType = "";
@@ -241,6 +246,9 @@ public final class Parser {
                     List<Ast.Statement> statements = parseBlock();
                     if(!tokens.get(-1).getLiteral().equals("END")) {
                         throw handleError("Expected END");
+                    }
+                    if (funType.equals("")) {
+                        return new Ast.Function(funName, parameters, parameterTypes, Optional.empty(), statements);
                     }
                     return new Ast.Function(funName, parameters, parameterTypes, Optional.of(funType), statements);
                 } else {

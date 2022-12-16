@@ -139,7 +139,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Switch ast) {
-        //TODO
         try {
             scope = new Scope(scope);
             Ast.Statement.Case test = ast.getCases().get(0);

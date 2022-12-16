@@ -87,9 +87,11 @@ public final class Generator implements Ast.Visitor<Void> {
         //print type
         print(Environment.getType(ast.getTypeName()).getJvmName());
         //check for list
-        if (ast.getVariable().getJvmName().equalsIgnoreCase("list")) {
-            //print [] if list
-            print("[]");
+        if (ast.getValue().isPresent()) {
+            if(ast.getValue().get() instanceof Ast.Expression.PlcList) {
+                //print [] if list
+                print("[]");
+            }
         }
         //print name
         print(" ", ast.getName());
@@ -111,7 +113,7 @@ public final class Generator implements Ast.Visitor<Void> {
             //print if exists
             print(Environment.getType(ast.getReturnTypeName().get()).getJvmName(), " ");
         } else {
-            print("void", " ");
+            print("Nil", " ");
         }
         //print space and name along with (
         print(ast.getName(), "(");
